@@ -4,3 +4,4 @@ numpy
 scikit-learn
 seaborn
 matplotlib
+https://github.com/sadiqamin324/project/blob/main/trans.csv
