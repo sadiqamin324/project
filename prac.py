@@ -15,8 +15,8 @@ st.set_option('deprecation.showPyplotGlobalUse', False)
 @st.cache_data
 def load_data():
     try:
-        cust = pd.read_csv(r"https://github.com/sadiqamin324/project/blob/main/cust.csv")
-        trans = pd.read_csv(r"https://github.com/sadiqamin324/project/blob/main/trans.csv")
+        cust = pd.read_csv(r"https://raw.githubusercontent.com/sadiqamin324/project/main/cust.csv")
+        trans = pd.read_csv(r"https://raw.githubusercontent.com/sadiqamin324/project/main/trans.csv")
         merged_df = pd.merge(cust, trans, on='customerEmail', how='inner')
         merged_df = merged_df.drop(columns=['Unnamed: 0_x', 'Unnamed: 0_y'])
         return merged_df
