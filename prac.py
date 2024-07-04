@@ -36,10 +36,9 @@ def preprocess_data(df):
     upper_bound = Q3 + 1.5 * IQR
     outliers = (df[numerical_features] < lower_bound) | (df[numerical_features] > upper_bound)
     df_cleaned = df[~outliers.any(axis=1)]
-    # df_cleaned['Transaction_Success_Rate'] = ((df_cleaned['No_Transactions'] / (df_cleaned['No_Transactions'] + df_cleaned['transactionFailed'])) * 100).round(2)
-    # df_cleaned['Transaction_TotalAmount'] = df_cleaned['No_Transactions'] * df_cleaned['transactionAmount']
-    df_cleaned.loc[:, 'Transaction_Success_Rate'] = ((df_cleaned['No_Transactions'] / (df_cleaned['No_Transactions'] + df_cleaned['transactionFailed'])) * 100).round(2)
-    df_cleaned.loc[:, 'Transaction_TotalAmount'] = df_cleaned['No_Transactions'] * df_cleaned['transactionAmount']
+    df_cleaned['Transaction_Success_Rate'] = ((df_cleaned['No_Transactions'] / (df_cleaned['No_Transactions'] + df_cleaned['transactionFailed'])) * 100).round(2)
+    df_cleaned['Transaction_TotalAmount'] = df_cleaned['No_Transactions'] * df_cleaned['transactionAmount']
+    
 
     
     # Impute missing values for all columns
