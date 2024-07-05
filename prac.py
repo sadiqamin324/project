@@ -13,14 +13,10 @@ st.set_option('deprecation.showPyplotGlobalUse', False)
 
 # Load Data
 @st.cache_data
-def load_data(cust_file=None, trans_file=None):
+def load_data():
     try:
-        if cust_file is not None and trans_file is not None:
-            cust = pd.read_csv(cust_file)
-            trans = pd.read_csv(trans_file)
-        else:
-            cust = pd.read_csv("https://raw.githubusercontent.com/sadiqamin324/project/main/cust.csv")
-            trans = pd.read_csv("https://raw.githubusercontent.com/sadiqamin324/project/main/trans.csv")
+        cust = pd.read_csv("https://raw.githubusercontent.com/sadiqamin324/project/main/cust.csv")
+        trans = pd.read_csv("https://raw.githubusercontent.com/sadiqamin324/project/main/trans.csv")
         
         merged_df = pd.merge(cust, trans, on='customerEmail', how='inner')
         merged_df = merged_df.drop(columns=['Unnamed: 0_x', 'Unnamed: 0_y'])
@@ -32,14 +28,8 @@ def load_data(cust_file=None, trans_file=None):
 # Streamlit App
 st.title('Fraud Email Detection')
 
-st.write("## Upload Customer and Transaction CSV files (optional)")
-cust_file = st.file_uploader("Choose the customer CSV file", type="csv")
-trans_file = st.file_uploader("Choose the transaction CSV file", type="csv")
-
-if cust_file is not None and trans_file is not None:
-    df = load_data(cust_file, trans_file)
-else:
-    df = load_data()
+# Load the data from URLs directly
+df = load_data()
 
 if not df.empty:
     # Data Preprocessing
@@ -168,4 +158,4 @@ if not df.empty:
         else:
             st.write("No data found for this email.")
 else:
-    st.write("Please upload both customer and transaction CSV files.")
+    st.write("Error loading data.")
