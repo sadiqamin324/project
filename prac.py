@@ -114,15 +114,23 @@ if not df.empty:
             viz_option = st.selectbox("Choose Visualization", ["Histograms", "Boxplots", "Correlation Matrix"])
             if viz_option == "Histograms":
                 st.write("### Histograms of Numerical Features")
-                fig, ax = plt.subplots(1, len(numerical_features), figsize=(15, 5))
-                for i, feature in enumerate(numerical_features):
-                    sns.histplot(data[feature], ax=ax[i], kde=True)
+                fig, ax = plt.subplots(1, 3, figsize=(15, 5))
+                sns.histplot(data['No_Transactions'], ax=ax[0], kde=True)
+                ax[0].set_title('No_Transactions')
+                sns.histplot(data['No_Orders'], ax=ax[1], kde=True)
+                ax[1].set_title('No_Orders')
+                sns.histplot(data['No_Payments'], ax=ax[2], kde=True)
+                ax[2].set_title('No_Payments')
                 st.pyplot(fig)
             elif viz_option == "Boxplots":
                 st.write("### Boxplots of Numerical Features")
-                fig, ax = plt.subplots(1, len(numerical_features), figsize=(15, 5))
-                for i, feature in enumerate(numerical_features):
-                    sns.boxplot(y=data[feature], ax=ax[i])
+                fig, ax = plt.subplots(1, 3, figsize=(15, 5))
+                sns.boxplot(y=data['No_Transactions'], ax=ax[0])
+                ax[0].set_title('No_Transactions')
+                sns.boxplot(y=data['No_Orders'], ax=ax[1])
+                ax[1].set_title('No_Orders')
+                sns.boxplot(y=data['No_Payments'], ax=ax[2])
+                ax[2].set_title('No_Payments')
                 st.pyplot(fig)
             elif viz_option == "Correlation Matrix":
                 st.write("### Correlation Matrix")
