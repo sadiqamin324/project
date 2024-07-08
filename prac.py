@@ -1,9 +1,9 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, RandomizedSearchCV
 from sklearn.svm import SVC
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score, confusion_matrix
 from sklearn.impute import SimpleImputer
 import seaborn as sns
@@ -65,37 +65,44 @@ if not df.empty:
 
     X, y = encode_data(data)
 
-    # Train Models with Improved Techniques
+    # Train Models with Ensemble Methods
     def train_models(X, y):
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
         
-        # Improved SVM Model
-        svm_model = SVC(kernel='rbf', gamma='auto', random_state=42, probability=True)
-        svm_model.fit(X_train, y_train)
-        
-        # Improved Random Forest Model
-        rf_model = RandomForestClassifier(n_estimators=300, max_depth=20, min_samples_split=5, random_state=42)
+        # Improved Random Forest Model with Hyperparameter Tuning
+        rf_params = {
+            'n_estimators': [100, 200, 300],
+            'max_depth': [None, 10, 20, 30],
+            'min_samples_split': [2, 5, 10],
+            'min_samples_leaf': [1, 2, 4],
+            'max_features': ['auto', 'sqrt', 'log2']
+        }
+        rf_model = RandomizedSearchCV(RandomForestClassifier(random_state=42), rf_params, cv=5, n_iter=50, random_state=42, n_jobs=-1)
         rf_model.fit(X_train, y_train)
+        
+        # Gradient Boosting Model
+        gb_model = GradientBoostingClassifier(n_estimators=200, max_depth=5, learning_rate=0.1, random_state=42)
+        gb_model.fit(X_train, y_train)
 
-        return svm_model, rf_model, X_test, y_test
+        return rf_model.best_estimator_, gb_model, X_test, y_test
 
-    svm_model, rf_model, X_test, y_test = train_models(X, y)
+    rf_model, gb_model, X_test, y_test = train_models(X, y)
 
     # Evaluate Models
-    def evaluate_model(y_test, predictions, model):
+    def evaluate_model(y_test, predictions):
         accuracy = accuracy_score(y_test, predictions)
         precision = precision_score(y_test, predictions)
         recall = recall_score(y_test, predictions)
         f1 = f1_score(y_test, predictions)
-        roc_auc = roc_auc_score(y_test, model.predict_proba(X_test)[:, 1])
+        roc_auc = roc_auc_score(y_test, predictions)
         cm = confusion_matrix(y_test, predictions)
         return accuracy, precision, recall, f1, roc_auc, cm
 
-    svm_predictions = svm_model.predict(X_test)
     rf_predictions = rf_model.predict(X_test)
+    gb_predictions = gb_model.predict(X_test)
 
-    svm_metrics = evaluate_model(y_test, svm_predictions, svm_model)
-    rf_metrics = evaluate_model(y_test, rf_predictions, rf_model)
+    rf_metrics = evaluate_model(y_test, rf_predictions)
+    gb_metrics = evaluate_model(y_test, gb_predictions)
 
     email = st.text_input("Enter the customer's email")
 
@@ -133,13 +140,13 @@ if not df.empty:
                 st.pyplot(fig)
 
             st.write("### Model Evaluation")
-            model_option = st.selectbox("Choose Model", ["SVM", "RandomForest"])
-            if model_option == "SVM":
-                metrics = svm_metrics
-                model = svm_model
-            else:
+            model_option = st.selectbox("Choose Model", ["RandomForest", "GradientBoosting"])
+            if model_option == "RandomForest":
                 metrics = rf_metrics
                 model = rf_model
+            else:
+                metrics = gb_metrics
+                model = gb_model
 
             if metrics:
                 st.write(f"### {model_option} Metrics")
