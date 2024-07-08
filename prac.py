@@ -118,31 +118,23 @@ if not df.empty:
             viz_option = st.selectbox("Choose Visualization", ["Histograms", "Boxplots", "Correlation Matrix"])
             if viz_option == "Histograms":
                 st.write("### Histograms of Numerical Features")
-                fig, ax = plt.subplots(1, 5, figsize=(20, 5))
+                fig, ax = plt.subplots(1, 3, figsize=(15, 5))
                 sns.histplot(data['No_Transactions'], ax=ax[0], kde=True)
                 ax[0].set_title('No_Transactions')
                 sns.histplot(data['No_Orders'], ax=ax[1], kde=True)
                 ax[1].set_title('No_Orders')
                 sns.histplot(data['No_Payments'], ax=ax[2], kde=True)
                 ax[2].set_title('No_Payments')
-                sns.histplot(data['Transaction_Success_Rate'], ax=ax[3], kde=True)
-                ax[3].set_title('Transaction_Success_Rate')
-                sns.histplot(data['Transaction_TotalAmount'], ax=ax[4], kde=True)
-                ax[4].set_title('Transaction_TotalAmount')
                 st.pyplot(fig)
             elif viz_option == "Boxplots":
                 st.write("### Boxplots of Numerical Features")
-                fig, ax = plt.subplots(1, 5, figsize=(20, 5))
+                fig, ax = plt.subplots(1, 3, figsize=(15, 5))
                 sns.boxplot(y=data['No_Transactions'], ax=ax[0])
                 ax[0].set_title('No_Transactions')
                 sns.boxplot(y=data['No_Orders'], ax=ax[1])
                 ax[1].set_title('No_Orders')
                 sns.boxplot(y=data['No_Payments'], ax=ax[2])
                 ax[2].set_title('No_Payments')
-                sns.boxplot(y=data['Transaction_Success_Rate'], ax=ax[3])
-                ax[3].set_title('Transaction_Success_Rate')
-                sns.boxplot(y=data['Transaction_TotalAmount'], ax=ax[4])
-                ax[4].set_title('Transaction_TotalAmount')
                 st.pyplot(fig)
             elif viz_option == "Correlation Matrix":
                 st.write("### Correlation Matrix")
@@ -179,3 +171,4 @@ if not df.empty:
             st.write("No data found for this email.")
 else:
     st.write("Error loading data.")
+show transection success rate  transection total amount in histogram
