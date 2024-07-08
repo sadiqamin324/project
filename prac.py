@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score, confusion_matrix
@@ -65,29 +65,17 @@ if not df.empty:
 
     X, y = encode_data(data)
 
-    # Train Models with Hyperparameter Tuning
+    # Train Models with Improved Techniques
     def train_models(X, y):
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
         
-        # SVM with GridSearchCV
-        svm_params = {
-            'C': [0.1, 1, 10],
-            'kernel': ['linear', 'rbf', 'poly'],
-            'gamma': ['scale', 'auto']
-        }
-        svm_grid = GridSearchCV(SVC(random_state=42, probability=True), svm_params, cv=5, scoring='accuracy')
-        svm_grid.fit(X_train, y_train)
-        svm_model = svm_grid.best_estimator_
+        # Improved SVM Model
+        svm_model = SVC(kernel='rbf', gamma='auto', random_state=42, probability=True)
+        svm_model.fit(X_train, y_train)
         
-        # RandomForest with GridSearchCV
-        rf_params = {
-            'n_estimators': [100, 200, 300],
-            'max_depth': [None, 10, 20],
-            'min_samples_split': [2, 5, 10]
-        }
-        rf_grid = GridSearchCV(RandomForestClassifier(random_state=42), rf_params, cv=5, scoring='accuracy')
-        rf_grid.fit(X_train, y_train)
-        rf_model = rf_grid.best_estimator_
+        # Improved Random Forest Model
+        rf_model = RandomForestClassifier(n_estimators=300, max_depth=20, min_samples_split=5, random_state=42)
+        rf_model.fit(X_train, y_train)
 
         return svm_model, rf_model, X_test, y_test
 
