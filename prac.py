@@ -25,28 +25,6 @@ def load_data():
         st.error(f"Error loading data: {e}")
         return pd.DataFrame()
 
-# Data Preprocessing
-def preprocess_data(df):
-    numerical_features = df.select_dtypes(include=[np.number]).columns.tolist()
-    Q1 = df[numerical_features].quantile(0.25)
-    Q3 = df[numerical_features].quantile(0.75)
-    IQR = Q3 - Q1
-    lower_bound = Q1 - 1.5 * IQR
-    upper_bound = Q3 + 1.5 * IQR
-    outliers = (df[numerical_features] < lower_bound) | (df[numerical_features] > upper_bound)
-    df_cleaned = df[~outliers.any(axis=1)]
-    df_cleaned['Transaction_Success_Rate'] = ((df_cleaned['No_Transactions'] / (df_cleaned['No_Transactions'] + df_cleaned['transactionFailed'])) * 100).round(2)
-    df_cleaned['Transaction_TotalAmount'] = df_cleaned['No_Transactions'] * df_cleaned['transactionAmount']
-    
-    # Impute missing values for all columns
-    imputer = SimpleImputer(strategy='most_frequent')
-    df_cleaned = pd.DataFrame(imputer.fit_transform(df_cleaned), columns=df_cleaned.columns)
-    
-    # Ensure 'Fraud' column is binary
-    df_cleaned['Fraud'] = df_cleaned['Fraud'].astype(int)
-    
-    return df_cleaned
-
 # Streamlit App
 st.title('Fraud Email Detection')
 
@@ -54,6 +32,28 @@ st.title('Fraud Email Detection')
 df = load_data()
 
 if not df.empty:
+    # Data Preprocessing
+    def preprocess_data(df):
+        numerical_features = df.select_dtypes(include=[np.number]).columns.tolist()
+        Q1 = df[numerical_features].quantile(0.25)
+        Q3 = df[numerical_features].quantile(0.75)
+        IQR = Q3 - Q1
+        lower_bound = Q1 - 1.5 * IQR
+        upper_bound = Q3 + 1.5 * IQR
+        outliers = (df[numerical_features] < lower_bound) | (df[numerical_features] > upper_bound)
+        df_cleaned = df[~outliers.any(axis=1)]
+        df_cleaned['Transaction_Success_Rate'] = ((df_cleaned['No_Transactions'] / (df_cleaned['No_Transactions'] + df_cleaned['transactionFailed'])) * 100).round(2)
+        df_cleaned['Transaction_TotalAmount'] = df_cleaned['No_Transactions'] * df_cleaned['transactionAmount']
+        
+        # Impute missing values for all columns
+        imputer = SimpleImputer(strategy='most_frequent')
+        df_cleaned = pd.DataFrame(imputer.fit_transform(df_cleaned), columns=df_cleaned.columns)
+        
+        # Ensure 'Fraud' column is binary
+        df_cleaned['Fraud'] = df_cleaned['Fraud'].astype(int)
+        
+        return df_cleaned
+
     data = preprocess_data(df)
 
     # Encode Data
@@ -93,31 +93,34 @@ if not df.empty:
         cm = confusion_matrix(y_test, predictions)
         return accuracy, precision, recall, f1, roc_auc, cm
 
-    svm_accuracy, svm_precision, svm_recall, svm_f1, svm_roc_auc, svm_cm = evaluate_model(y_test, svm_predictions, svm_model)
-    rf_accuracy, rf_precision, rf_recall, rf_f1, rf_roc_auc, rf_cm = evaluate_model(y_test, rf_predictions, rf_model)
+    svm_metrics = evaluate_model(y_test, svm_predictions, svm_model)
+    rf_metrics = evaluate_model(y_test, rf_predictions, rf_model)
 
-    # Display Evaluation Metrics
-    st.write("## Model Evaluation")
+    email = st.text_input("Enter the customer's email")
 
-    st.write("### SVM Metrics")
-    st.write(f"Accuracy: {svm_accuracy:.2f}")
-    st.write(f"Precision: {svm_precision:.2f}")
-    st.write(f"Recall: {svm_recall:.2f}")
-    st.write(f"F1 Score: {svm_f1:.2f}")
-    st.write(f"ROC AUC: {svm_roc_auc:.2f}")
-    st.write("Confusion Matrix:")
-    st.write(svm_cm)
+    if email:
+        customer_data = data[data['customerEmail'] == email]
 
-    st.write("### Random Forest Metrics")
-    st.write(f"Accuracy: {rf_accuracy:.2f}")
-    st.write(f"Precision: {rf_precision:.2f}")
-    st.write(f"Recall: {rf_recall:.2f}")
-    st.write(f"F1 Score: {rf_f1:.2f}")
-    st.write(f"ROC AUC: {rf_roc_auc:.2f}")
-    st.write("Confusion Matrix:")
-    st.write(rf_cm)
+        if not customer_data.empty:
+            st.write("## Customer Data")
+            st.write(customer_data)
 
-    st.write("Models Trained Successfully!")
-    st.write("You can now use these models for predictions and further evaluation.")
+            st.write("### Numerical Features")
+            numerical_features = ['No_Transactions', 'No_Orders', 'No_Payments', 'Transaction_Success_Rate', 'Transaction_TotalAmount']
+            for feature in numerical_features:
+                st.write(f"{feature}: {customer_data[feature].values[0]}")
+
+            st.write("### Data Visualization")
+            for index, row in customer_data.iterrows():
+                st.write(f"#### Data for Transaction: {index}")
+                fig, ax = plt.subplots(1, 3, figsize=(15, 5))
+                sns.histplot(row['No_Transactions'], ax=ax[0], kde=True)
+                ax[0].set_title('No_Transactions')
+                sns.histplot(row['No_Orders'], ax=ax[1], kde=True)
+                ax[1].set_title('No_Orders')
+                sns.histplot(row['No_Payments'], ax=ax[2], kde=True)
+                ax[2].set_title('No_Payments')
+                st.pyplot(fig)
+            
 else:
-    st.write("Error loading data. Please check your data source.")
+    st.write("Error loading data.")
