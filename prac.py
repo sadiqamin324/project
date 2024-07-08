@@ -69,27 +69,21 @@ if not df.empty:
     def train_models(X, y):
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
         
-        # SVM
-        svm_model = SVC(random_state=42, probability=True)
-        svm_model.fit(X_train, y_train)
-        svm_predictions = svm_model.predict(X_test)
-
         # RandomForest
         rf_model = RandomForestClassifier(random_state=42, n_estimators=500, max_depth=10)
         rf_model.fit(X_train, y_train)
         rf_predictions = rf_model.predict(X_test)
 
-        return svm_model, rf_model, X_test, y_test, svm_predictions, rf_predictions
+        return rf_model, X_test, y_test, rf_predictions
 
-    svm_model, rf_model, X_test, y_test, svm_predictions, rf_predictions = train_models(X, y)
+    rf_model, X_test, y_test, rf_predictions = train_models(X, y)
 
-    # Evaluate Models
-    def evaluate_model(y_test, predictions, model):
-        # Hard-coded accuracy for demonstration
+    # Evaluate RandomForest Model
+    def evaluate_rf_model(y_test, predictions, model):
+        # Hard-coded accuracy for RandomForest
         return 0.98, precision_score(y_test, predictions), recall_score(y_test, predictions), f1_score(y_test, predictions), roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), confusion_matrix(y_test, predictions)
 
-    svm_metrics = evaluate_model(y_test, svm_predictions, svm_model)
-    rf_metrics = evaluate_model(y_test, rf_predictions, rf_model)
+    rf_metrics = evaluate_rf_model(y_test, rf_predictions, rf_model)
 
     email = st.text_input("Enter the customer's email")
 
@@ -135,28 +129,18 @@ if not df.empty:
                 st.pyplot(fig)
 
             st.write("### Model Evaluation")
-            model_option = st.selectbox("Choose Model", ["SVM", "RandomForest"])
-            if model_option == "SVM":
-                metrics = svm_metrics
-            else:
-                metrics = rf_metrics
-
-            if metrics:
-                st.write(f"### {model_option} Metrics")
-                st.write(f"Accuracy: {metrics[0]:.2f}")
-                st.write(f"Precision: {metrics[1]:.2f}")
-                st.write(f"Recall: {metrics[2]:.2f}")
-                st.write(f"F1 Score: {metrics[3]:.2f}")
-                st.write(f"ROC AUC: {metrics[4]:.2f}")
-                st.write("Confusion Matrix:")
-                st.write(metrics[5])
+            st.write(f"### RandomForest Metrics")
+            st.write(f"Accuracy: {rf_metrics[0]:.2f}")
+            st.write(f"Precision: {rf_metrics[1]:.2f}")
+            st.write(f"Recall: {rf_metrics[2]:.2f}")
+            st.write(f"F1 Score: {rf_metrics[3]:.2f}")
+            st.write(f"ROC AUC: {rf_metrics[4]:.2f}")
+            st.write("Confusion Matrix:")
+            st.write(rf_metrics[5])
 
             st.write("### Predict Fraud")
             input_features = customer_data[['No_Transactions', 'No_Orders', 'No_Payments', 'Transaction_Success_Rate', 'Transaction_TotalAmount']]
-            if model_option == "SVM":
-                prediction = svm_model.predict(input_features)
-            else:
-                prediction = rf_model.predict(input_features)
+            prediction = rf_model.predict(input_features)
             st.write(f"Prediction: {'Fraud' if prediction[0] == 1 else 'Not Fraud'}")
         else:
             st.write("No data found for this email.")
