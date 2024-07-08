@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score, confusion_matrix
@@ -65,23 +65,33 @@ if not df.empty:
 
     X, y = encode_data(data)
 
-    # Train Models
+    # Train Models with Hyperparameter Tuning
     def train_models(X, y):
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
         
-        # SVM
-        svm_model = SVC(random_state=42, probability=True)
-        svm_model.fit(X_train, y_train)
-        svm_predictions = svm_model.predict(X_test)
+        # SVM with GridSearchCV
+        svm_params = {
+            'C': [0.1, 1, 10],
+            'kernel': ['linear', 'rbf', 'poly'],
+            'gamma': ['scale', 'auto']
+        }
+        svm_grid = GridSearchCV(SVC(random_state=42, probability=True), svm_params, cv=5, scoring='accuracy')
+        svm_grid.fit(X_train, y_train)
+        svm_model = svm_grid.best_estimator_
+        
+        # RandomForest with GridSearchCV
+        rf_params = {
+            'n_estimators': [100, 200, 300],
+            'max_depth': [None, 10, 20],
+            'min_samples_split': [2, 5, 10]
+        }
+        rf_grid = GridSearchCV(RandomForestClassifier(random_state=42), rf_params, cv=5, scoring='accuracy')
+        rf_grid.fit(X_train, y_train)
+        rf_model = rf_grid.best_estimator_
 
-        # RandomForest
-        rf_model = RandomForestClassifier(random_state=42)
-        rf_model.fit(X_train, y_train)
-        rf_predictions = rf_model.predict(X_test)
+        return svm_model, rf_model, X_test, y_test
 
-        return svm_model, rf_model, X_test, y_test, svm_predictions, rf_predictions
-
-    svm_model, rf_model, X_test, y_test, svm_predictions, rf_predictions = train_models(X, y)
+    svm_model, rf_model, X_test, y_test = train_models(X, y)
 
     # Evaluate Models
     def evaluate_model(y_test, predictions, model):
@@ -92,6 +102,9 @@ if not df.empty:
         roc_auc = roc_auc_score(y_test, model.predict_proba(X_test)[:, 1])
         cm = confusion_matrix(y_test, predictions)
         return accuracy, precision, recall, f1, roc_auc, cm
+
+    svm_predictions = svm_model.predict(X_test)
+    rf_predictions = rf_model.predict(X_test)
 
     svm_metrics = evaluate_model(y_test, svm_predictions, svm_model)
     rf_metrics = evaluate_model(y_test, rf_predictions, rf_model)
@@ -135,8 +148,10 @@ if not df.empty:
             model_option = st.selectbox("Choose Model", ["SVM", "RandomForest"])
             if model_option == "SVM":
                 metrics = svm_metrics
+                model = svm_model
             else:
                 metrics = rf_metrics
+                model = rf_model
 
             if metrics:
                 st.write(f"### {model_option} Metrics")
@@ -150,10 +165,7 @@ if not df.empty:
 
             st.write("### Predict Fraud")
             input_features = customer_data[['No_Transactions', 'No_Orders', 'No_Payments', 'Transaction_Success_Rate', 'Transaction_TotalAmount']]
-            if model_option == "SVM":
-                prediction = svm_model.predict(input_features)
-            else:
-                prediction = rf_model.predict(input_features)
+            prediction = model.predict(input_features)
             st.write(f"Prediction: {'Fraud' if prediction[0] == 1 else 'Not Fraud'}")
         else:
             st.write("No data found for this email.")
