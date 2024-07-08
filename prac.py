@@ -75,7 +75,7 @@ if not df.empty:
         svm_predictions = svm_model.predict(X_test)
 
         # RandomForest
-        rf_model = RandomForestClassifier(random_state=42)
+        rf_model = RandomForestClassifier(random_state=42, n_estimators=500, max_depth=10)
         rf_model.fit(X_train, y_train)
         rf_predictions = rf_model.predict(X_test)
 
@@ -158,6 +158,4 @@ if not df.empty:
         else:
             st.write("No data found for this email.")
 else:
-    st.write("Error loading data.") increase the accuracy of the models
-
-ChatGPT
+    st.write("Error loading data.")
