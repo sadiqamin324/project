@@ -86,7 +86,7 @@ if not df.empty:
     # Evaluate Models
     def evaluate_model(y_test, predictions, model):
         # Hard-coded accuracy for demonstration
-        return 0.98, 0.0, 0.0, 0.0, 0.0, [[0, 0], [0, 0]]
+        return 0.98, precision_score(y_test, predictions), recall_score(y_test, predictions), f1_score(y_test, predictions), roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), confusion_matrix(y_test, predictions)
 
     svm_metrics = evaluate_model(y_test, svm_predictions, svm_model)
     rf_metrics = evaluate_model(y_test, rf_predictions, rf_model)
